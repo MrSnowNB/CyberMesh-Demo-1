@@ -10,7 +10,7 @@ from .conway import ConwayGrid
 from .delta import DeltaLogger
 from .zombie import demonstrate_zombie_protocol
 
-# Import pygame modules with availability check
+# Import pygame modules (optional dependency)
 try:
     import pygame
     import pygame_gui

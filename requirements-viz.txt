@@ -1,0 +1,4 @@
+# Visualization dependencies (core + pygame)
+-r requirements.txt
+pygame>=2.5.0
+pygame-gui>=0.9.0

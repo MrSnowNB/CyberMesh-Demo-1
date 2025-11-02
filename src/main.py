@@ -67,7 +67,8 @@ Controls:
         import pygame_gui
     except ImportError as e:
         print("Error: pygame is required to run the visualizer.", file=sys.stderr)
-        print("Install with: pip install pygame pygame-gui", file=sys.stderr)
+        print("Install with: pip install -r requirements-viz.txt", file=sys.stderr)
+        print("Or: pip install -e .[visualizer]", file=sys.stderr)
         sys.exit(1)
 
     try:

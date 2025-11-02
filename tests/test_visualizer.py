@@ -9,20 +9,13 @@ from src.delta import DeltaLogger
 import pathlib
 import tempfile
 
-# Try to import pygame, skip tests if not available
+# Check pygame availability for test skipping
 try:
     import pygame
     import pygame_gui
     PYGAME_AVAILABLE = True
 except ImportError:
     PYGAME_AVAILABLE = False
-    # Create mock modules to prevent import errors in patch decorators
-    import sys
-    from unittest.mock import MagicMock
-    pygame = MagicMock()
-    pygame_gui = MagicMock()
-    sys.modules['pygame'] = pygame
-    sys.modules['pygame_gui'] = pygame_gui
 
 from src.visualizer import Visualizer
 
