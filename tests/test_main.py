@@ -1,9 +1,9 @@
 """Unit tests for main module."""
 
-import pytest
-from unittest.mock import patch, Mock
-import sys
 import pathlib
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Check pygame availability for test skipping
 try:
@@ -131,8 +131,8 @@ class TestMain:
             main()
 
             # Check that DeltaLogger was created with custom path
-            from src.delta import DeltaLogger
             from src.conway import ConwayGrid
+            from src.delta import DeltaLogger
 
             # The visualizer constructor should have been called with a logger
             # that has the custom log path

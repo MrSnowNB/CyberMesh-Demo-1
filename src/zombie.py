@@ -5,15 +5,14 @@ demonstrating the ability to kill and perfectly resurrect cell colors
 using neighbor aggregation and delta log reconstruction.
 """
 
-from typing import List, Optional
 
 import numpy as np
 
 from .cell import Cell
-from .delta import DeltaLogger, reconstruct_color_from_deltas, compute_delta_fidelity
+from .delta import DeltaLogger, compute_delta_fidelity, reconstruct_color_from_deltas
 
 
-def kill_region(cells: List[Cell]) -> None:
+def kill_region(cells: list[Cell]) -> None:
     """Kill a region of cells, marking them as dead while preserving colors.
 
     This simulates "zombification" where cells lose their alive state but
@@ -27,7 +26,7 @@ def kill_region(cells: List[Cell]) -> None:
         # Colors are preserved for resurrection
 
 
-def resurrect_cell(cell: Cell, neighbors: List[Cell], logger: DeltaLogger,
+def resurrect_cell(cell: Cell, neighbors: list[Cell], logger: DeltaLogger,
                   alpha: float = 0.1) -> float:
     """Resurrect a dead cell using neighbor aggregation and delta reconstruction.
 
@@ -77,8 +76,8 @@ def resurrect_cell(cell: Cell, neighbors: List[Cell], logger: DeltaLogger,
     return fidelity
 
 
-def resurrect_region(cells: List[Cell], logger: DeltaLogger,
-                    alpha: float = 0.1) -> List[float]:
+def resurrect_region(cells: list[Cell], logger: DeltaLogger,
+                    alpha: float = 0.1) -> list[float]:
     """Resurrect a region of cells and return fidelity scores.
 
     Args:
@@ -104,8 +103,8 @@ def resurrect_region(cells: List[Cell], logger: DeltaLogger,
     return fidelity_scores
 
 
-def compute_region_fidelity(original_cells: List[Cell],
-                           resurrected_cells: List[Cell]) -> float:
+def compute_region_fidelity(original_cells: list[Cell],
+                           resurrected_cells: list[Cell]) -> float:
     """Compute average fidelity for a resurrected region.
 
     Args:
@@ -129,7 +128,7 @@ def compute_region_fidelity(original_cells: List[Cell],
     return total_fidelity / len(original_cells)
 
 
-def _compute_neighbor_aggregate(neighbors: List[Cell], alpha: float = 0.1) -> np.ndarray:
+def _compute_neighbor_aggregate(neighbors: list[Cell], alpha: float = 0.1) -> np.ndarray:
     """Compute color aggregate from neighboring cells.
 
     Uses exponential moving average of live neighbor colors.
@@ -157,8 +156,8 @@ def _compute_neighbor_aggregate(neighbors: List[Cell], alpha: float = 0.1) -> np
     return mean_color
 
 
-def demonstrate_zombie_protocol(grid_cells: List[List[Cell]], logger: DeltaLogger,
-                               kill_region_coords: List[tuple[int, int]],
+def demonstrate_zombie_protocol(grid_cells: list[list[Cell]], logger: DeltaLogger,
+                               kill_region_coords: list[tuple[int, int]],
                                alpha: float = 0.1) -> dict:
     """Demonstrate the complete zombie protocol on a region.
 
@@ -225,7 +224,7 @@ def demonstrate_zombie_protocol(grid_cells: List[List[Cell]], logger: DeltaLogge
     }
 
 
-def _create_mock_neighbors(grid_cells: List[List[Cell]], position: tuple[int, int]) -> List[Cell]:
+def _create_mock_neighbors(grid_cells: list[list[Cell]], position: tuple[int, int]) -> list[Cell]:
     """Create mock neighbors for demonstration purposes.
 
     In real usage, ConwayGrid.get_neighbors() should be used instead.

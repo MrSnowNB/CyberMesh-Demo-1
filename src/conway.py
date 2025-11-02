@@ -4,7 +4,6 @@ This module implements the ConwayGrid class, managing an 8×8 toroidal grid
 of Conway's Game of Life with color state preservation.
 """
 
-from typing import List
 
 import numpy as np
 
@@ -20,7 +19,7 @@ class ConwayGrid:
 
     width: int = 8
     height: int = 8
-    cells: List[List[Cell]]
+    cells: list[list[Cell]]
     generation: int = 0
     alive_count: int = 0
 
@@ -76,7 +75,7 @@ class ConwayGrid:
         self.alive_count = alive_count
         self.generation += 1
 
-    def get_neighbors(self, x: int, y: int) -> List[Cell]:
+    def get_neighbors(self, x: int, y: int) -> list[Cell]:
         """Return Moore neighborhood (8 cells) with toroidal wrapping.
 
         Args:
@@ -152,7 +151,7 @@ class ConwayGrid:
 
         self._update_alive_count()
 
-    def kill_region(self, cells: List[Cell]) -> None:
+    def kill_region(self, cells: list[Cell]) -> None:
         """Mark cells as dead, preserve colors for resurrection.
 
         Args:

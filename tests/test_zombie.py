@@ -4,14 +4,16 @@ import pathlib
 import tempfile
 
 import numpy as np
-import pytest
 
-from src.zombie import (
-    kill_region, resurrect_cell, resurrect_region, compute_region_fidelity,
-    _compute_neighbor_aggregate, demonstrate_zombie_protocol
-)
 from src.cell import Cell
 from src.delta import DeltaLogger
+from src.zombie import (
+    _compute_neighbor_aggregate,
+    compute_region_fidelity,
+    demonstrate_zombie_protocol,
+    kill_region,
+    resurrect_cell,
+)
 
 
 class TestZombieProtocol:

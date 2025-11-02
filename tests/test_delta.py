@@ -3,14 +3,17 @@
 import json
 import pathlib
 import tempfile
-import time
-from unittest.mock import patch
 
 import numpy as np
 import pytest
 
-from src.delta import DeltaLogger, apply_delta_to_cells, reconstruct_color_from_deltas, compute_delta_fidelity
 from src.cell import Cell
+from src.delta import (
+    DeltaLogger,
+    apply_delta_to_cells,
+    compute_delta_fidelity,
+    reconstruct_color_from_deltas,
+)
 
 
 class TestDeltaLogger:
@@ -72,7 +75,7 @@ class TestDeltaLogger:
         assert logger.entries == []
 
         # File should contain valid JSON
-        with open(self.log_path, 'r') as f:
+        with open(self.log_path) as f:
             data = json.load(f)
         assert "version" in data
         assert "entries" in data
@@ -97,7 +100,7 @@ class TestDeltaLogger:
         assert entry["result_color"] == [140, 120, 155]
 
         # File should be updated
-        with open(self.log_path, 'r') as f:
+        with open(self.log_path) as f:
             data = json.load(f)
         assert len(data["entries"]) == 1
 
@@ -167,7 +170,7 @@ class TestDeltaLogger:
         assert len(logger.entries) == 0
 
         # File should be updated
-        with open(self.log_path, 'r') as f:
+        with open(self.log_path) as f:
             data = json.load(f)
         assert data["entries"] == []
 
@@ -194,7 +197,7 @@ class TestDeltaLogger:
             logger.log_delta((0, 0), np.array([1, 0, 0], dtype=np.int8), 1.0, np.array([129, 128, 128], dtype=np.uint8))
 
         # Main log should still be valid
-        with open(self.log_path, 'r') as f:
+        with open(self.log_path) as f:
             data = json.load(f)
         assert isinstance(data, dict)
         assert "entries" in data

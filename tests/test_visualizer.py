@@ -1,13 +1,14 @@
 """Unit tests for visualizer module."""
 
-import pytest
+import pathlib
+import tempfile
 from unittest.mock import Mock, patch
+
 import numpy as np
+import pytest
 
 from src.conway import ConwayGrid
 from src.delta import DeltaLogger
-import pathlib
-import tempfile
 
 # Check pygame availability for test skipping
 try:

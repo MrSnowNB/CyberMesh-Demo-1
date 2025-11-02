@@ -1,10 +1,8 @@
 """Unit tests for Conway grid module."""
 
 import numpy as np
-import pytest
 
 from src.conway import ConwayGrid
-from src.cell import Cell
 
 
 class TestConwayGrid:

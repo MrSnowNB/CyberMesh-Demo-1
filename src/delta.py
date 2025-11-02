@@ -8,7 +8,7 @@ import json
 import pathlib
 import tempfile
 import time
-from typing import Dict, List, Tuple, Any
+from typing import Any
 
 import numpy as np
 
@@ -24,7 +24,7 @@ class DeltaLogger:
 
     log_path: pathlib.Path
     max_entries: int
-    entries: List[Dict[str, Any]]
+    entries: list[dict[str, Any]]
 
     def __init__(self, log_path: pathlib.Path = pathlib.Path("logs/delta_log.json"),
                  max_entries: int = 1000) -> None:
@@ -44,7 +44,7 @@ class DeltaLogger:
         # Load existing log if it exists
         self._load_log()
 
-    def log_delta(self, cell_id: Tuple[int, int], delta: np.ndarray,
+    def log_delta(self, cell_id: tuple[int, int], delta: np.ndarray,
                   timestamp: float, result_color: np.ndarray) -> None:
         """Append delta operation to log with atomic write.
 
@@ -70,7 +70,7 @@ class DeltaLogger:
         # Atomic write to disk
         self._save_log()
 
-    def get_recent_deltas(self, cell_id: Tuple[int, int], count: int = 10) -> List[Dict[str, Any]]:
+    def get_recent_deltas(self, cell_id: tuple[int, int], count: int = 10) -> list[dict[str, Any]]:
         """Return last N delta operations for a specific cell.
 
         Args:
@@ -86,7 +86,7 @@ class DeltaLogger:
         ]
         return cell_entries[:count]
 
-    def get_all_deltas_for_cell(self, cell_id: Tuple[int, int]) -> List[Dict[str, Any]]:
+    def get_all_deltas_for_cell(self, cell_id: tuple[int, int]) -> list[dict[str, Any]]:
         """Return all delta operations for a specific cell.
 
         Args:
@@ -117,7 +117,7 @@ class DeltaLogger:
             return
 
         try:
-            with open(self.log_path, 'r') as f:
+            with open(self.log_path) as f:
                 data = json.load(f)
 
             # Validate structure
@@ -132,7 +132,7 @@ class DeltaLogger:
                 if not all(key in entry for key in required_keys):
                     raise ValueError(f"Invalid entry format: {entry}")
 
-        except (json.JSONDecodeError, ValueError, IOError):
+        except (OSError, json.JSONDecodeError, ValueError):
             # Log is corrupted or invalid, start fresh
             print(f"Warning: Could not load delta log {self.log_path}, starting fresh")
             self.entries = []
@@ -160,7 +160,7 @@ class DeltaLogger:
         pathlib.Path(temp_path).replace(self.log_path)
 
 
-def apply_delta_to_cells(cells: List[Cell], delta: np.ndarray,
+def apply_delta_to_cells(cells: list[Cell], delta: np.ndarray,
                         logger: DeltaLogger) -> None:
     """Apply delta to multiple cells with logging.
 
@@ -183,8 +183,8 @@ def apply_delta_to_cells(cells: List[Cell], delta: np.ndarray,
         )
 
 
-def reconstruct_color_from_deltas(cell_id: Tuple[int, int], base_color: np.ndarray,
-                                deltas: List[Dict[str, Any]]) -> np.ndarray:
+def reconstruct_color_from_deltas(cell_id: tuple[int, int], base_color: np.ndarray,
+                                deltas: list[dict[str, Any]]) -> np.ndarray:
     """Reconstruct cell color by applying a sequence of deltas.
 
     Args:

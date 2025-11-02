@@ -4,7 +4,6 @@ This module implements the interactive Pygame-based UI for the CyberMesh Conway 
 providing real-time visualization of the Conway grid with color manipulation capabilities.
 """
 
-from typing import Optional, Tuple, List
 
 from .conway import ConwayGrid
 from .delta import DeltaLogger
@@ -69,7 +68,7 @@ class Visualizer:
         self.delta_b = 0
 
         # UI state
-        self.selected_cells: List[Tuple[int, int]] = []
+        self.selected_cells: list[tuple[int, int]] = []
         self.kill_mode = False
         self.last_fidelity = 0.0
 
@@ -179,7 +178,7 @@ class Visualizer:
 
         pygame.quit()
 
-    def _handle_click(self, pos: Tuple[int, int]):
+    def _handle_click(self, pos: tuple[int, int]):
         """Handle mouse click at given position."""
         grid_x, grid_y = self._screen_to_grid(pos)
 
@@ -199,7 +198,7 @@ class Visualizer:
                 cell.apply_delta(delta)
                 self.logger.log_delta(cell.position, delta, pygame.time.get_ticks() / 1000.0, cell.color_vector)
 
-    def _screen_to_grid(self, screen_pos: Tuple[int, int]) -> Tuple[int, int]:
+    def _screen_to_grid(self, screen_pos: tuple[int, int]) -> tuple[int, int]:
         """Convert screen coordinates to grid coordinates."""
         screen_x, screen_y = screen_pos
         grid_x = (screen_x - self.GRID_OFFSET[0]) // self.CELL_SIZE
@@ -343,10 +342,11 @@ class Visualizer:
 
 def create_demo_visualizer() -> Visualizer:
     """Create a visualizer with demo grid and logger for testing."""
+    import pathlib
+    import tempfile
+
     from .conway import ConwayGrid
     from .delta import DeltaLogger
-    import tempfile
-    import pathlib
 
     # Create temp logger
     temp_dir = pathlib.Path(tempfile.mkdtemp())
