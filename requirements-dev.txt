@@ -1,7 +1,7 @@
 # Development dependencies (includes everything)
 -r requirements.txt
 pygame>=2.5.0
-pygame-gui>=0.9.0
+pygame-gui>=0.6.0
 pytest>=7.4.0
 ruff>=0.1.0
 mypy>=1.7.0

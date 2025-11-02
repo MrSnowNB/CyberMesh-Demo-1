@@ -141,4 +141,4 @@ class TestMain:
 
             assert isinstance(grid_arg, ConwayGrid)
             assert isinstance(logger_arg, DeltaLogger)
-            assert custom_log_dir in str(logger_arg.log_path) or str(logger_arg.log_path).startswith(str(custom_log_dir))
+            assert str(custom_log_dir) in str(logger_arg.log_path) or str(logger_arg.log_path).startswith(str(custom_log_dir))
