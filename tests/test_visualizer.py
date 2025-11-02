@@ -16,8 +16,13 @@ try:
     PYGAME_AVAILABLE = True
 except ImportError:
     PYGAME_AVAILABLE = False
-    pygame = None
-    pygame_gui = None
+    # Create mock modules to prevent import errors in patch decorators
+    import sys
+    from unittest.mock import MagicMock
+    pygame = MagicMock()
+    pygame_gui = MagicMock()
+    sys.modules['pygame'] = pygame
+    sys.modules['pygame_gui'] = pygame_gui
 
 from src.visualizer import Visualizer
 
@@ -40,37 +45,38 @@ class TestVisualizer:
         import shutil
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    @patch('pygame.init')
-    @patch('pygame.display.set_mode')
-    @patch('pygame.display.set_caption')
-    @patch('pygame.time.Clock')
-    @patch('pygame_gui.UIManager')
-    @patch('pygame.font.SysFont')
-    def test_initialization(self, mock_font, mock_ui_manager, mock_clock, mock_set_mode, mock_set_caption, mock_init):
+    def test_initialization(self):
         """Test visualizer initialization."""
-        # Mock pygame components
-        mock_screen = Mock()
-        mock_set_mode.return_value = mock_screen
-        mock_clock_instance = Mock()
-        mock_clock.return_value = mock_clock_instance
+        with patch('pygame.init'), \
+             patch('pygame.display.set_mode') as mock_set_mode, \
+             patch('pygame.display.set_caption'), \
+             patch('pygame.time.Clock') as mock_clock, \
+             patch('pygame_gui.UIManager'), \
+             patch('pygame.font.SysFont'):
 
-        visualizer = Visualizer(self.grid, self.logger)
+            # Mock pygame components
+            mock_screen = Mock()
+            mock_set_mode.return_value = mock_screen
+            mock_clock_instance = Mock()
+            mock_clock.return_value = mock_clock_instance
 
-        # Check basic attributes
-        assert visualizer.grid == self.grid
-        assert visualizer.logger == self.logger
-        assert visualizer.delta_r == 0
-        assert visualizer.delta_g == 0
-        assert visualizer.delta_b == 0
-        assert visualizer.selected_cells == []
-        assert not visualizer.kill_mode
-        assert visualizer.last_fidelity == 0.0
+            visualizer = Visualizer(self.grid, self.logger)
 
-        # Check window configuration
-        assert visualizer.WINDOW_SIZE == (800, 600)
-        assert visualizer.GRID_SIZE == 8
-        assert visualizer.CELL_SIZE == 64
-        assert visualizer.GRID_OFFSET == (50, 50)
+            # Check basic attributes
+            assert visualizer.grid == self.grid
+            assert visualizer.logger == self.logger
+            assert visualizer.delta_r == 0
+            assert visualizer.delta_g == 0
+            assert visualizer.delta_b == 0
+            assert visualizer.selected_cells == []
+            assert not visualizer.kill_mode
+            assert visualizer.last_fidelity == 0.0
+
+            # Check window configuration
+            assert visualizer.WINDOW_SIZE == (800, 600)
+            assert visualizer.GRID_SIZE == 8
+            assert visualizer.CELL_SIZE == 64
+            assert visualizer.GRID_OFFSET == (50, 50)
 
     def test_screen_to_grid_conversion(self):
         """Test conversion from screen coordinates to grid coordinates."""
@@ -92,28 +98,22 @@ class TestVisualizer:
             assert visualizer._screen_to_grid((50, 50)) == (0, 0)  # Top-left corner
             assert visualizer._screen_to_grid((49, 49)) == (-1, -1)  # Outside grid
 
-    @patch('pygame.init')
-    @patch('pygame.display.set_mode')
-    @patch('pygame.display.set_caption')
-    @patch('pygame.time.Clock')
-    @patch('pygame_gui.UIManager')
-    @patch('pygame.font.SysFont')
-    def test_update_delta_values(self, mock_font, mock_ui_manager, mock_clock, mock_set_mode, mock_set_caption, mock_init):
+    def test_update_delta_values(self):
         """Test updating delta values from sliders."""
-        # Mock slider objects
-        mock_r_slider = Mock()
-        mock_r_slider.get_current_value.return_value = 100
-        mock_g_slider = Mock()
-        mock_g_slider.get_current_value.return_value = -50
-        mock_b_slider = Mock()
-        mock_b_slider.get_current_value.return_value = 25
-
         with patch('pygame.init'), \
              patch('pygame.display.set_mode'), \
              patch('pygame.display.set_caption'), \
              patch('pygame.time.Clock'), \
              patch('pygame_gui.UIManager'), \
              patch('pygame.font.SysFont'):
+
+            # Mock slider objects
+            mock_r_slider = Mock()
+            mock_r_slider.get_current_value.return_value = 100
+            mock_g_slider = Mock()
+            mock_g_slider.get_current_value.return_value = -50
+            mock_b_slider = Mock()
+            mock_b_slider.get_current_value.return_value = 25
 
             visualizer = Visualizer(self.grid, self.logger)
 
@@ -128,13 +128,7 @@ class TestVisualizer:
             assert visualizer.delta_g == -50
             assert visualizer.delta_b == 25
 
-    @patch('pygame.init')
-    @patch('pygame.display.set_mode')
-    @patch('pygame.display.set_caption')
-    @patch('pygame.time.Clock')
-    @patch('pygame_gui.UIManager')
-    @patch('pygame.font.SysFont')
-    def test_handle_click_normal_mode(self, mock_font, mock_ui_manager, mock_clock, mock_set_mode, mock_set_caption, mock_init):
+    def test_handle_click_normal_mode(self):
         """Test click handling in normal mode (apply delta)."""
         with patch('pygame.init'), \
              patch('pygame.display.set_mode'), \
@@ -163,13 +157,7 @@ class TestVisualizer:
             # Check that it was logged
             assert visualizer.logger.get_log_size() == 1
 
-    @patch('pygame.init')
-    @patch('pygame.display.set_mode')
-    @patch('pygame.display.set_caption')
-    @patch('pygame.time.Clock')
-    @patch('pygame_gui.UIManager')
-    @patch('pygame.font.SysFont')
-    def test_handle_click_kill_mode(self, mock_font, mock_ui_manager, mock_clock, mock_set_mode, mock_set_caption, mock_init):
+    def test_handle_click_kill_mode(self):
         """Test click handling in kill mode (select cells)."""
         with patch('pygame.init'), \
              patch('pygame.display.set_mode'), \
@@ -193,13 +181,7 @@ class TestVisualizer:
             visualizer._handle_click(click_pos)
             assert (0, 0) not in visualizer.selected_cells
 
-    @patch('pygame.init')
-    @patch('pygame.display.set_mode')
-    @patch('pygame.display.set_caption')
-    @patch('pygame.time.Clock')
-    @patch('pygame_gui.UIManager')
-    @patch('pygame.font.SysFont')
-    def test_handle_ui_events_create_glider(self, mock_font, mock_ui_manager, mock_clock, mock_set_mode, mock_set_caption, mock_init):
+    def test_handle_ui_events_create_glider(self):
         """Test UI event handling for create glider button."""
         with patch('pygame.init'), \
              patch('pygame.display.set_mode'), \
@@ -223,13 +205,7 @@ class TestVisualizer:
             # Check that glider was created
             assert visualizer.grid.alive_count == 5  # Glider has 5 cells
 
-    @patch('pygame.init')
-    @patch('pygame.display.set_mode')
-    @patch('pygame.display.set_caption')
-    @patch('pygame.time.Clock')
-    @patch('pygame_gui.UIManager')
-    @patch('pygame.font.SysFont')
-    def test_handle_ui_events_reset(self, mock_font, mock_ui_manager, mock_clock, mock_set_mode, mock_set_caption, mock_init):
+    def test_handle_ui_events_reset(self):
         """Test UI event handling for reset button."""
         with patch('pygame.init'), \
              patch('pygame.display.set_mode'), \
@@ -267,6 +243,8 @@ class TestVisualizer:
 
     def test_create_demo_visualizer(self):
         """Test demo visualizer creation."""
+        from src.visualizer import create_demo_visualizer
+
         with patch('pygame.init'), \
              patch('pygame.display.set_mode'), \
              patch('pygame.display.set_caption'), \
@@ -274,7 +252,7 @@ class TestVisualizer:
              patch('pygame_gui.UIManager'), \
              patch('pygame.font.SysFont'):
 
-            visualizer = Visualizer.create_demo_visualizer()
+            visualizer = create_demo_visualizer()
 
             assert isinstance(visualizer, Visualizer)
             assert isinstance(visualizer.grid, ConwayGrid)
