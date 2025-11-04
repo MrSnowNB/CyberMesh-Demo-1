@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberMesh Conway Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #00d4aa;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        #grid {
+            border: 2px solid #333;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+
+        .controls {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 300px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group h3 {
+            margin-bottom: 10px;
+            color: #00d4aa;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .slider-group label {
+            min-width: 20px;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00d4aa;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00d4aa;
+            cursor: pointer;
+            border: none;
+        }
+
+        .delta-display {
+            font-family: monospace;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        button {
+            background: #00d4aa;
+            color: #0f0f0f;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        button:hover {
+            background: #00b894;
+        }
+
+        button:active {
+            background: #009d80;
+        }
+
+        .status {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .status div {
+            margin-bottom: 5px;
+        }
+
+        .status strong {
+            color: #00d4aa;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .controls {
+                min-width: auto;
+                width: 100%;
+                max-width: 480px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>CyberMesh Conway Demo</h1>
+
+    <div class="container">
+        <canvas id="grid" width="480" height="480"></canvas>
+
+        <div class="controls">
+            <div class="control-group">
+                <h3>Delta Tuner</h3>
+                <div class="slider-group">
+                    <label>R</label>
+                    <input type="range" id="deltaR" min="-255" max="255" value="0">
+                </div>
+                <div class="slider-group">
+                    <label>G</label>
+                    <input type="range" id="deltaG" min="-255" max="255" value="0">
+                </div>
+                <div class="slider-group">
+                    <label>B</label>
+                    <input type="range" id="deltaB" min="-255" max="255" value="0">
+                </div>
+                <div class="delta-display" id="deltaDisplay">Δ: (0, 0, 0)</div>
+            </div>
+
+            <div class="control-group">
+                <h3>Actions</h3>
+                <button id="createGlider">Create Glider</button>
+                <button id="killRegion">Kill Region</button>
+                <button id="resurrect">Resurrect</button>
+                <button id="reset">Reset Grid</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="status">
+        <div><strong>Gen:</strong> <span id="generation">0</span></div>
+        <div><strong>Alive:</strong> <span id="aliveCount">0</span></div>
+        <div><strong>Fidelity:</strong> <span id="fidelity">0.0%</span></div>
+        <div><strong>Status:</strong> <span id="statusText">Ready</span></div>
+    </div>
+
+    <script>
+        // JavaScript will be implemented here
+        console.log('CyberMesh Conway Demo initialized');
+
+        // Cell class for Conway grid cells
+        class Cell {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.alive = false;
+                this.colorVector = [128, 128, 128]; // Default grey
+            }
+
+            applyDelta(r, g, b) {
+                // Add deltas to color vector with clamping
+                this.colorVector[0] = Math.max(0, Math.min(255, this.colorVector[0] + r));
+                this.colorVector[1] = Math.max(0, Math.min(255, this.colorVector[1] + g));
+                this.colorVector[2] = Math.max(0, Math.min(255, this.colorVector[2] + b));
+            }
+        }
+
+        // ConwayGrid class for Game of Life simulation
+        class ConwayGrid {
+            constructor(width = 8, height = 8) {
+                this.width = width;
+                this.height = height;
+                this.generation = 0;
+                this.cells = [];
+
+                // Initialize grid with dead cells
+                for (let y = 0; y < height; y++) {
+                    this.cells[y] = [];
+                    for (let x = 0; x < width; x++) {
+                        this.cells[y][x] = new Cell(x, y);
+                    }
+                }
+            }
+
+            getCell(x, y) {
+                return this.cells[y][x];
+            }
+
+            setAlive(x, y, alive) {
+                this.getCell(x, y).alive = alive;
+            }
+
+            getNeighbors(x, y) {
+                // Return array of 8 neighboring cells with toroidal wrapping
+                const neighbors = [];
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        if (dx === 0 && dy === 0) continue; // Skip self
+
+                        // Toroidal wrapping using modulo
+                        const nx = (x + dx + this.width) % this.width;
+                        const ny = (y + dy + this.height) % this.height;
+
+                        neighbors.push(this.getCell(nx, ny));
+                    }
+                }
+                return neighbors;
+            }
+
+            step() {
+                // Calculate next state for all cells
+                const nextState = [];
+                for (let y = 0; y < this.height; y++) {
+                    nextState[y] = [];
+                    for (let x = 0; x < this.width; x++) {
+                        const cell = this.getCell(x, y);
+                        const neighbors = this.getNeighbors(x, y);
+                        const aliveNeighbors = neighbors.filter(n => n.alive).length;
+
+                        // Conway's Game of Life rules B3/S23
+                        let nextAlive = cell.alive;
+                        if (cell.alive) {
+                            // Survival: stay alive if 2 or 3 neighbors
+                            nextAlive = (aliveNeighbors === 2 || aliveNeighbors === 3);
+                        } else {
+                            // Birth: become alive if exactly 3 neighbors
+                            nextAlive = (aliveNeighbors === 3);
+                        }
+
+                        nextState[y][x] = nextAlive;
+                    }
+                }
+
+                // Apply next state (only change alive/dead, preserve colors)
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        this.getCell(x, y).alive = nextState[y][x];
+                    }
+                }
+
+                this.generation++;
+            }
+
+            get aliveCount() {
+                let count = 0;
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        if (this.getCell(x, y).alive) count++;
+                    }
+                }
+                return count;
+            }
+
+            reset() {
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        const cell = this.getCell(x, y);
+                        cell.alive = false;
+                        cell.colorVector = [128, 128, 128]; // Reset to grey
+                    }
+                }
+                this.generation = 0;
+            }
+
+            createGlider(centerX = 3, centerY = 3) {
+                // Create a glider pattern (5 cells)
+                // Pattern: . # .
+                //          . . #
+                //          # # #
+                const pattern = [
+                    [1, 0], // (centerX+1, centerY-1)
+                    [2, 1], // (centerX+2, centerY+0)
+                    [0, 2], // (centerX+0, centerY+1)
+                    [1, 2], // (centerX+1, centerY+1)
+                    [2, 2]  // (centerX+2, centerY+1)
+                ];
+
+                // Apply green delta to glider cells
+                pattern.forEach(([dx, dy]) => {
+                    const x = (centerX + dx) % this.width;
+                    const y = (centerY + dy) % this.height;
+                    const cell = this.getCell(x, y);
+                    cell.alive = true;
+                    cell.applyDelta(0, 100, 0); // Green delta
+                });
+            }
+        }
+
+        // Test the Cell class
+        console.log('Testing Cell class...');
+        const testCell = new Cell(0, 0);
+        console.log('Initial cell:', testCell);
+        testCell.applyDelta(10, 20, 30);
+        console.log('After delta (10,20,30):', testCell.colorVector); // Should be [138, 148, 158]
+        testCell.applyDelta(200, 200, 200);
+        console.log('After large delta (clamping test):', testCell.colorVector); // Should be [255, 255, 255]
+        testCell.applyDelta(-500, -500, -500);
+        console.log('After negative delta (clamping test):', testCell.colorVector); // Should be [0, 0, 0]
+
+        // Basic setup
+        const canvas = document.getElementById('grid');
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+            document.getElementById('statusText').textContent = 'Error: Canvas not supported';
+            console.error('Canvas not supported');
+        } else {
+            document.getElementById('statusText').textContent = 'Canvas initialized successfully - Cell class working';
+            console.log('Canvas initialized successfully');
+        }
+
+        // Create Conway grid instance
+        const grid = new ConwayGrid(8, 8);
+        console.log('ConwayGrid created:', grid);
+
+        // Canvas rendering
+        const CELL_SIZE = 60; // 480px / 8 cells = 60px per cell
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let y = 0; y < 8; y++) {
+                for (let x = 0; x < 8; x++) {
+                    const cell = grid.getCell(x, y);
+                    const screenX = x * CELL_SIZE;
+                    const screenY = y * CELL_SIZE;
+
+                    // Draw cell background
+                    const [r, g, b] = cell.colorVector;
+                    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                    ctx.fillRect(screenX, screenY, CELL_SIZE, CELL_SIZE);
+
+                    // Draw grid lines
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(screenX, screenY, CELL_SIZE, CELL_SIZE);
+
+                    // Draw alive indicator (small dot in center for alive cells)
+                    if (cell.alive) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(screenX + CELL_SIZE/2, screenY + CELL_SIZE/2, 3, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+
+        // Initial draw
+        drawGrid();
+
+        // Delta system variables
+        let currentDelta = { r: 0, g: 0, b: 0 };
+
+        // Delta slider event listeners
+        const deltaR = document.getElementById('deltaR');
+        const deltaG = document.getElementById('deltaG');
+        const deltaB = document.getElementById('deltaB');
+        const deltaDisplay = document.getElementById('deltaDisplay');
+
+        function updateDeltaValues() {
+            currentDelta.r = parseInt(deltaR.value);
+            currentDelta.g = parseInt(deltaG.value);
+            currentDelta.b = parseInt(deltaB.value);
+            updateDeltaDisplay();
+            console.log('Delta updated:', currentDelta);
+        }
+
+        function updateDeltaDisplay() {
+            deltaDisplay.textContent = `Δ: (${currentDelta.r}, ${currentDelta.g}, ${currentDelta.b})`;
+        }
+
+        // Wire sliders to delta system
+        deltaR.addEventListener('input', updateDeltaValues);
+        deltaG.addEventListener('input', updateDeltaValues);
+        deltaB.addEventListener('input', updateDeltaValues);
+
+        // Initialize delta display
+        updateDeltaValues();
+
+        // Click-to-paint functionality
+        function screenToGrid(screenX, screenY) {
+            const gridX = Math.floor(screenX / CELL_SIZE);
+            const gridY = Math.floor(screenY / CELL_SIZE);
+            return { x: gridX, y: gridY };
+        }
+
+        function handleCanvasClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const screenX = event.clientX - rect.left;
+            const screenY = event.clientY - rect.top;
+
+            const gridPos = screenToGrid(screenX, screenY);
+
+            // Check if click is within grid bounds
+            if (gridPos.x >= 0 && gridPos.x < 8 && gridPos.y >= 0 && gridPos.y < 8) {
+                const cell = grid.getCell(gridPos.x, gridPos.y);
+
+                // Apply current delta
+                cell.applyDelta(currentDelta.r, currentDelta.g, currentDelta.b);
+
+                // Redraw grid to show changes
+                drawGrid();
+
+                console.log(`Applied delta (${currentDelta.r}, ${currentDelta.g}, ${currentDelta.b}) to cell (${gridPos.x}, ${gridPos.y})`);
+                console.log('New color:', cell.colorVector);
+
+                document.getElementById('statusText').textContent = `Applied delta to cell (${gridPos.x}, ${gridPos.y})`;
+            }
+        }
+
+        // Add click event listener to canvas
+        canvas.addEventListener('click', handleCanvasClick);
+
+        // Conway stepping functionality
+        function stepConway() {
+            grid.step();
+            drawGrid();
+            updateStatus();
+            console.log(`Conway step: Generation ${grid.generation}, Alive: ${grid.aliveCount}`);
+        }
+
+        // Status update function
+        function updateStatus() {
+            document.getElementById('generation').textContent = grid.generation;
+            document.getElementById('aliveCount').textContent = grid.aliveCount;
+            document.getElementById('fidelity').textContent = '0.0%';
+        }
+
+        // Initialize status
+        updateStatus();
+
+        // Button event listeners
+        document.getElementById('createGlider').addEventListener('click', () => {
+            grid.createGlider(3, 3);
+            drawGrid();
+            updateStatus();
+            console.log('Glider created at center');
+            document.getElementById('statusText').textContent = 'Glider created with green delta';
+        });
+
+        document.getElementById('killRegion').addEventListener('click', () => {
+            console.log('Kill Region clicked');
+            document.getElementById('statusText').textContent = 'Region killed';
+        });
+
+        document.getElementById('resurrect').addEventListener('click', () => {
+            console.log('Resurrect clicked');
+            document.getElementById('statusText').textContent = 'Resurrection attempted';
+        });
+
+        document.getElementById('reset').addEventListener('click', () => {
+            grid.reset();
+            drawGrid();
+            updateStatus();
+            console.log('Grid reset');
+            document.getElementById('statusText').textContent = 'Grid reset to grey';
+        });
+
+        // Add keyboard shortcut for stepping (Spacebar)
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                event.preventDefault();
+                stepConway();
+            }
+        });
+
+        console.log('Event listeners attached');
+    </script>
+</body>
+</html>
